@@ -18,7 +18,7 @@
       padding:20px
     }
     .app{
-      max-width:600px;
+      max-width:620px;
       width:100%;
       background:#131a2b;
       border:1px solid #1e293b;
@@ -26,7 +26,7 @@
       padding:32px 28px;
       box-shadow:0 25px 50px -12px rgba(0,0,0,.5)
     }
-    .header{text-align:center;margin-bottom:32px}
+    .header{text-align:center;margin-bottom:28px}
     .header .icon{font-size:48px;margin-bottom:12px}
     .header h1{
       font-size:2rem;
@@ -36,14 +36,14 @@
       -webkit-text-fill-color:transparent
     }
     .header p{color:#64748b;font-size:.85rem}
-    
+
     .pipeline{
       display:flex;
       align-items:center;
       justify-content:space-between;
       background:#0f172a;
       border-radius:14px;
-      padding:14px 16px;
+      padding:14px 12px;
       margin-bottom:20px;
       gap:2px;
       flex-wrap:wrap
@@ -53,10 +53,11 @@
       flex-direction:column;
       align-items:center;
       gap:6px;
-      font-size:.65rem;
+      font-size:.6rem;
       color:#475569;
       transition:.2s;
-      flex:1
+      flex:1;
+      text-align:center
     }
     .step .dot{
       width:10px;
@@ -67,7 +68,20 @@
     }
     .step.done .dot{background:#10b981;box-shadow:0 0 10px #10b981}
     .step.active .dot{background:#f59e0b;box-shadow:0 0 10px #f59e0b;animation:pulse .8s infinite}
+    .step.error .dot{background:#ef4444;box-shadow:0 0 10px #ef4444}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+    .error-box{
+      display:none;
+      background:#1e0a0a;
+      border:1px solid #ef4444;
+      border-radius:12px;
+      padding:14px 18px;
+      margin-bottom:16px;
+      color:#fca5a5;
+      font-size:.8rem
+    }
+    .error-box strong{color:#ef4444}
 
     .output{
       background:#0f172a;
@@ -99,15 +113,23 @@
     .btn:disabled{opacity:.5;cursor:not-allowed}
     .btn:hover:not(:disabled){filter:brightness(1.1)}
 
+    .status-text{
+      text-align:center;
+      margin-top:12px;
+      font-size:.75rem;
+      color:#64748b;
+      min-height:20px
+    }
+
     .log{
-      margin-top:16px;
+      margin-top:14px;
       background:#0f172a;
       border-radius:12px;
       padding:12px 14px;
       font-size:.7rem;
       font-family:monospace;
       color:#64748b;
-      max-height:130px;
+      max-height:140px;
       overflow-y:auto
     }
   </style>
@@ -128,6 +150,10 @@
       <div class="step" id="step-email"><span class="dot"></span>Email</div>
     </div>
 
+    <div class="error-box" id="error-box">
+      <strong>❌ Error:</strong> <span id="error-msg"></span>
+    </div>
+
     <div class="output" id="output">
       <h3>📱 Latest App</h3>
       <p><strong>Name:</strong> <span id="out-name">-</span></p>
@@ -136,41 +162,70 @@
     </div>
 
     <button class="btn" id="btn" onclick="run()">🚀 Generate App</button>
-    <div class="log" id="log">⚫ Ready</div>
+    <div class="status-text" id="status-text">⚫ Ready</div>
+    <div class="log" id="log"></div>
   </div>
 
   <script>
     const API = window.location.origin;
     let timer = null;
 
-    async function run() {
+    const stepNames = ['idea','code','github','build','email'];
+    const stepIds = ['step-idea','step-code','step-upload','step-build','step-email'];
+
+    async function run(){
       const btn = document.getElementById('btn');
       btn.disabled = true;
       btn.innerHTML = '⏳ Running...';
+      document.getElementById('error-box').style.display = 'none';
+      document.getElementById('status-text').textContent = '⚡ Pipeline starting...';
+      document.getElementById('log').innerHTML = '';
+
       try{
         await fetch(API + '/run');
         poll();
       }catch(e){
-        document.getElementById('log').innerHTML = '❌ Error: ' + e.message;
+        showError('Server connect nahi ho paya: ' + e.message);
         btn.disabled = false;
         btn.innerHTML = '🚀 Generate App';
       }
     }
 
-    async function poll() {
+    function showError(msg){
+      const box = document.getElementById('error-box');
+      box.style.display = 'block';
+      document.getElementById('error-msg').textContent = msg;
+      document.getElementById('status-text').textContent = '❌ Failed';
+    }
+
+    async function poll(){
       try{
         const r = await fetch(API + '/status');
         const d = await r.json();
+
+        // Update pipeline dots
+        stepNames.forEach((s,i) => {
+          const el = document.getElementById(stepIds[i]);
+          if(!el) return;
+          el.classList.remove('done','active','error');
+          if(d[s]?.status === 'done') el.classList.add('done');
+          if(d[s]?.status === 'running') el.classList.add('active');
+          if(d[s]?.status === 'error') el.classList.add('error');
+        });
+
+        // Update status text
+        const runningStep = stepNames.find(s => d[s]?.status === 'running');
+        const errorStep = stepNames.find(s => d[s]?.status === 'error');
         
-        const map = { idea:'idea', code:'code', github:'upload', build:'build', email:'email' };
-        for(let key in map){
-          const el = document.getElementById('step-' + map[key]);
-          if(!el) continue;
-          el.classList.remove('done','active');
-          if(d[key]?.status === 'done') el.classList.add('done');
-          if(d[key]?.status === 'running') el.classList.add('active');
+        if(errorStep){
+          document.getElementById('status-text').textContent = `❌ Failed at: ${errorStep.toUpperCase()}`;
+        }else if(runningStep){
+          document.getElementById('status-text').textContent = `🔄 Running: ${runningStep.toUpperCase()}...`;
+        }else if(d.complete){
+          document.getElementById('status-text').textContent = '✅ All done!';
         }
 
+        // Show app info
         if(d.app){
           document.getElementById('output').style.display = 'block';
           document.getElementById('out-name').textContent = d.app.name;
@@ -179,10 +234,20 @@
           document.getElementById('out-apk').href = d.app.apkUrl;
         }
 
+        // Show logs
         if(d.logs?.length){
           document.getElementById('log').innerHTML = d.logs
-            .map(l => `[${new Date(l.time).toLocaleTimeString()}] ${l.message}`)
+            .map(l => {
+              const icon = l.type === 'error' ? '❌' : l.type === 'success' ? '✅' : 'ℹ️';
+              return `${icon} [${new Date(l.time).toLocaleTimeString()}] ${l.message}`;
+            })
             .join('<br>');
+        }
+
+        // Check for errors in logs
+        const lastError = d.logs?.find(l => l.type === 'error');
+        if(lastError){
+          showError(lastError.message);
         }
 
         if(!d.complete){
@@ -191,7 +256,10 @@
           document.getElementById('btn').disabled = false;
           document.getElementById('btn').innerHTML = '🚀 Generate App';
         }
-      }catch(e){}
+      }catch(e){
+        // Silent retry
+        timer = setTimeout(poll, 5000);
+      }
     }
 
     poll();
