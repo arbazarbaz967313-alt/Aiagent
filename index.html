@@ -3,158 +3,198 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🤖 AI App Factory</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <title>AI App Factory</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; background: #0f0f1a; color: #e0e0e0; min-height: 100vh; padding: 20px; }
-    .container { max-width: 800px; margin: 0 auto; }
-    header { text-align: center; padding: 30px 0; }
-    header h1 { font-size: 2.5rem; color: #6C63FF; }
-    .subtitle { color: #888; }
-    .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 12px; margin: 20px 0; }
-    .card { background: #1a1a2e; border: 2px solid #2a2a4a; border-radius: 12px; padding: 18px; text-align: center; transition: 0.3s; }
-    .card.active { border-color: #FFA726; box-shadow: 0 0 15px rgba(255,167,38,0.3); }
-    .card.done { border-color: #4CAF50; }
-    .card.error { border-color: #f44336; }
-    .card-icon { font-size: 2rem; }
-    .label { display: block; font-size: 0.8rem; color: #888; }
-    .status { display: block; font-size: 0.75rem; margin-top: 5px; font-weight: 600; }
-    .app-info { background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 12px; padding: 20px; margin: 20px 0; display: none; }
-    .app-info h2 { color: #6C63FF; }
-    .app-info a { color: #6C63FF; }
-    .controls { text-align: center; margin: 20px 0; }
-    .btn { padding: 14px 35px; border: none; border-radius: 50px; cursor: pointer; font-weight: 700; font-size: 1rem; margin: 5px; }
-    .btn-run { background: linear-gradient(135deg, #6C63FF, #E040FB); color: #fff; }
-    .btn-run:disabled { opacity: 0.5; }
-    .logs { background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 12px; padding: 18px; }
-    .logs h3 { color: #aaa; }
-    #log-container { max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 0.8rem; color: #aaa; }
-    .log-line { padding: 4px 0; border-bottom: 1px solid #111; }
-    .log-line.success { color: #4CAF50; }
-    .log-line.error { color: #f44336; }
-    .log-line.info { color: #FFA726; }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{
+      background:#0b0f19;
+      color:#e2e8f0;
+      font-family:'Plus Jakarta Sans',sans-serif;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      min-height:100vh;
+      padding:20px
+    }
+    .app{
+      max-width:600px;
+      width:100%;
+      background:#131a2b;
+      border:1px solid #1e293b;
+      border-radius:24px;
+      padding:32px 28px;
+      box-shadow:0 25px 50px -12px rgba(0,0,0,.5)
+    }
+    .header{text-align:center;margin-bottom:32px}
+    .header .icon{font-size:48px;margin-bottom:12px}
+    .header h1{
+      font-size:2rem;
+      font-weight:800;
+      background:linear-gradient(135deg,#a78bfa,#60a5fa);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent
+    }
+    .header p{color:#64748b;font-size:.85rem}
+    
+    .pipeline{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      background:#0f172a;
+      border-radius:14px;
+      padding:14px 16px;
+      margin-bottom:20px;
+      gap:2px;
+      flex-wrap:wrap
+    }
+    .step{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:6px;
+      font-size:.65rem;
+      color:#475569;
+      transition:.2s;
+      flex:1
+    }
+    .step .dot{
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      background:#334155;
+      transition:.3s
+    }
+    .step.done .dot{background:#10b981;box-shadow:0 0 10px #10b981}
+    .step.active .dot{background:#f59e0b;box-shadow:0 0 10px #f59e0b;animation:pulse .8s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+    .output{
+      background:#0f172a;
+      border-radius:14px;
+      padding:18px;
+      margin-bottom:20px;
+      display:none
+    }
+    .output h3{color:#a78bfa;margin-bottom:12px;font-size:.95rem}
+    .output p{font-size:.82rem;margin-bottom:6px}
+    .output a{color:#60a5fa;text-decoration:none;font-weight:600}
+
+    .btn{
+      width:100%;
+      background:linear-gradient(135deg,#6366f1,#8b5cf6);
+      color:#fff;
+      border:none;
+      padding:14px;
+      border-radius:14px;
+      font-weight:700;
+      font-size:1rem;
+      cursor:pointer;
+      transition:.2s;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px
+    }
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    .btn:hover:not(:disabled){filter:brightness(1.1)}
+
+    .log{
+      margin-top:16px;
+      background:#0f172a;
+      border-radius:12px;
+      padding:12px 14px;
+      font-size:.7rem;
+      font-family:monospace;
+      color:#64748b;
+      max-height:130px;
+      overflow-y:auto
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>🤖 AI App Factory</h1>
-      <p class="subtitle">Roz ek naya Flutter app — Generate, Build & Email</p>
-    </header>
-
-    <div class="status-grid">
-      <div class="card" id="card-idea">
-        <div class="card-icon">🧠</div>
-        <span class="label">DeepSeek Idea</span>
-        <span class="status" id="status-idea">⚫ Waiting</span>
-      </div>
-      <div class="card" id="card-code">
-        <div class="card-icon">💻</div>
-        <span class="label">Kimi Code</span>
-        <span class="status" id="status-code">⚫ Waiting</span>
-      </div>
-      <div class="card" id="card-github">
-        <div class="card-icon">📤</div>
-        <span class="label">GitHub Upload</span>
-        <span class="status" id="status-github">⚫ Waiting</span>
-      </div>
-      <div class="card" id="card-build">
-        <div class="card-icon">🔨</div>
-        <span class="label">Build APK</span>
-        <span class="status" id="status-build">⚫ Waiting</span>
-      </div>
-      <div class="card" id="card-email">
-        <div class="card-icon">📧</div>
-        <span class="label">Email</span>
-        <span class="status" id="status-email">⚫ Waiting</span>
-      </div>
+  <div class="app">
+    <div class="header">
+      <div class="icon">⚡</div>
+      <h1>AI App Factory</h1>
+      <p>Daily Flutter apps — idea to APK automatically</p>
     </div>
 
-    <div class="app-info" id="app-info">
-      <h2>📱 Latest App</h2>
-      <p><strong>Name:</strong> <span id="app-name">-</span></p>
-      <p><strong>Desc:</strong> <span id="app-desc">-</span></p>
-      <p><strong>GitHub:</strong> <a href="#" target="_blank" id="app-github">-</a></p>
-      <p><strong>APK:</strong> <a href="#" target="_blank" id="app-apk">Download</a></p>
+    <div class="pipeline" id="pipeline">
+      <div class="step" id="step-idea"><span class="dot"></span>Idea</div>
+      <div class="step" id="step-code"><span class="dot"></span>Code</div>
+      <div class="step" id="step-upload"><span class="dot"></span>GitHub</div>
+      <div class="step" id="step-build"><span class="dot"></span>Build</div>
+      <div class="step" id="step-email"><span class="dot"></span>Email</div>
     </div>
 
-    <div class="controls">
-      <button class="btn btn-run" onclick="triggerPipeline()">🚀 Run Now</button>
-      <button class="btn" style="background:#2a2a4a;color:#ccc;" onclick="resetStatus()">🔄 Reset</button>
+    <div class="output" id="output">
+      <h3>📱 Latest App</h3>
+      <p><strong>Name:</strong> <span id="out-name">-</span></p>
+      <p><strong>Desc:</strong> <span id="out-desc">-</span></p>
+      <p>🔗 <a href="#" target="_blank" id="out-github">GitHub</a> | 📦 <a href="#" target="_blank" id="out-apk">APK</a></p>
     </div>
 
-    <div class="logs">
-      <h3>📜 Logs</h3>
-      <div id="log-container"></div>
-    </div>
+    <button class="btn" id="btn" onclick="run()">🚀 Generate App</button>
+    <div class="log" id="log">⚫ Ready</div>
   </div>
 
   <script>
     const API = window.location.origin;
-    
-    async function triggerPipeline() {
-      const btn = document.querySelector('.btn-run');
+    let timer = null;
+
+    async function run() {
+      const btn = document.getElementById('btn');
       btn.disabled = true;
-      btn.textContent = '⏳ Running...';
-      
-      await fetch(`${API}/run`);
-      startPolling();
+      btn.innerHTML = '⏳ Running...';
+      try{
+        await fetch(API + '/run');
+        poll();
+      }catch(e){
+        document.getElementById('log').innerHTML = '❌ Error: ' + e.message;
+        btn.disabled = false;
+        btn.innerHTML = '🚀 Generate App';
+      }
     }
 
-    async function pollStatus() {
-      try {
-        const res = await fetch(`${API}/status`);
-        const d = await res.json();
+    async function poll() {
+      try{
+        const r = await fetch(API + '/status');
+        const d = await r.json();
         
-        ['idea','code','github','build','email'].forEach(s => {
-          if (d[s]) {
-            document.getElementById(`status-${s}`).textContent = d[s].text;
-            const card = document.getElementById(`card-${s}`);
-            card.classList.remove('active','done','error');
-            if (d[s].status === 'running') card.classList.add('active');
-            if (d[s].status === 'done') card.classList.add('done');
-            if (d[s].status === 'error') card.classList.add('error');
-          }
-        });
-
-        if (d.app) {
-          document.getElementById('app-info').style.display = 'block';
-          document.getElementById('app-name').textContent = d.app.name;
-          document.getElementById('app-desc').textContent = d.app.desc;
-          document.getElementById('app-github').href = d.app.githubUrl;
-          document.getElementById('app-github').textContent = d.app.githubUrl;
-          document.getElementById('app-apk').href = d.app.apkUrl;
+        const map = { idea:'idea', code:'code', github:'upload', build:'build', email:'email' };
+        for(let key in map){
+          const el = document.getElementById('step-' + map[key]);
+          if(!el) continue;
+          el.classList.remove('done','active');
+          if(d[key]?.status === 'done') el.classList.add('done');
+          if(d[key]?.status === 'running') el.classList.add('active');
         }
 
-        if (d.logs && d.logs.length > 0) {
-          const container = document.getElementById('log-container');
-          container.innerHTML = d.logs.map(l => 
-            `<div class="log-line ${l.type}">[${new Date(l.time).toLocaleTimeString()}] ${l.message}</div>`
-          ).join('');
+        if(d.app){
+          document.getElementById('output').style.display = 'block';
+          document.getElementById('out-name').textContent = d.app.name;
+          document.getElementById('out-desc').textContent = d.app.desc;
+          document.getElementById('out-github').href = d.app.githubUrl;
+          document.getElementById('out-apk').href = d.app.apkUrl;
         }
 
-        if (d.complete) {
-          document.querySelector('.btn-run').disabled = false;
-          document.querySelector('.btn-run').textContent = '🚀 Run Now';
-        } else {
-          setTimeout(pollStatus, 3000);
+        if(d.logs?.length){
+          document.getElementById('log').innerHTML = d.logs
+            .map(l => `[${new Date(l.time).toLocaleTimeString()}] ${l.message}`)
+            .join('<br>');
         }
-      } catch(e) {}
+
+        if(!d.complete){
+          timer = setTimeout(poll, 3000);
+        }else{
+          document.getElementById('btn').disabled = false;
+          document.getElementById('btn').innerHTML = '🚀 Generate App';
+        }
+      }catch(e){}
     }
 
-    function startPolling() { setTimeout(pollStatus, 3000); }
-    function resetStatus() {
-      ['idea','code','github','build','email'].forEach(s => {
-        document.getElementById(`status-${s}`).textContent = '⚫ Waiting';
-        document.getElementById(`card-${s}`).classList.remove('active','done','error');
-      });
-      document.getElementById('app-info').style.display = 'none';
-      document.getElementById('log-container').innerHTML = '';
-    }
-
-    // Initial load
-    pollStatus();
+    poll();
   </script>
 </body>
 </html>
